@@ -1,0 +1,19 @@
+{
+  "name": "qng",
+  "version": "1.0.3",
+  "description": "A simple tool for nginx",
+  "main": "index.js",
+  "bin": {
+    "ng": "./bin/ng"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "xuejian.xu",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.9.0",
+    "optimist": "^0.6.1",
+    "prompt": "^1.0.0"
+  }
+}

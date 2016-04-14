@@ -1,5 +1,5 @@
 {
-    "default" : "fuwu",
+    "default": "fuwu",
     "fuwu": "/usr/local/etc/nginx/vhost/fuwu.qunar.com.conf",
-    "test": "/usr/local/etc/nginx/vhost/test.conf"
+    "test": "/usr/local/etc/nginx/vhost/test.qunar.com.conf"
 }

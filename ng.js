@@ -7,6 +7,7 @@ var write = require('./module/write.js');
 var exec = require("child_process").exec;
 var config = require('./config.json');
 var path = require('path');
+var fs = require('fs');
 
 function Ng(option){
     this.args = option.args;
@@ -35,7 +36,7 @@ Ng.prototype = {
         /**
          * 删除一条规则
          */
-        remove: function(){
+        rm: function(){
             var _this = this;
 
             prompt.start();
@@ -110,7 +111,7 @@ Ng.prototype = {
         /**
          * 修改一条规则
          */
-        modify : function(){
+        md : function(){
             var _this = this;
 
             prompt.start();
@@ -164,6 +165,8 @@ Ng.prototype = {
          * 列出所有host配置文件
          */
         host : function(){
+            logger.info('默认: ' + config.default);
+
             _.forOwn(config, function(value, key){
                 if(key == 'default') return;
 
@@ -175,27 +178,136 @@ Ng.prototype = {
          * 添加一条host配置文件
          */
         addhost : function(){
+            _this = this;
+
             prompt.start();
             prompt.get([
                 {
+                    name : 'host',
+                    message : '请输入改host全称(例: fuwu.qunar.com)',
+                    warning : '全称不能为空!',
+                    empty : false
+                },
+                {
                     name : 'alias',
+                    message : '请输入该host简称(例: fuwu)',
                     warning : '别名不能为空!',
                     empty : false
                 },
                 {
                     name : 'path',
+                    message : '请输入该host配置文件路径(例: /usr/local/etc/nginx/vhost/test.conf)',
                     warning : '路径不能为空!',
                     empty : false
                 }
             ], function(err, values){
+                if(err) return logger.errlog(err);
+
                 config[values.alias] = values.path;
+
+                var tpl = fs.readFileSync(path.join(__dirname,'tpl/base.conf'), 'utf8');
+
+                try{
+                    fs.writeFileSync(values.path, tpl.replace('$host$', values.host))
+                }catch(err){
+                    logger.errlog('host配置文件创建失败,请检查文件路径是否有效!');
+                }
+
+                try{
+                    fs.writeFileSync(path.join(__dirname,'config.json'), JSON.stringify(config,null,4));
+                }catch(err){
+                    logger.errlog('config.json文件更新失败!');
+                }
+
+                logger.info(values.alias + ' 添加成功! 当前host列表:');
+
+                _this.actions.host();
+            })
+        },
+
+        /**
+         * 删除一条host
+         */
+        rmhost : function(){
+            var  hosts = [];
+
+            logger.info('当前host列表:');
+            _.forOwn(config, function(value, key){
+                if(key == 'default') return;
+
+                hosts.push(key);
+
+                logger.info([key,value].join(' '));
+            });
+
+            prompt.start();
+            prompt.get({
+                name : 'del',
+                message : '选择要删除的host,请输入简称',
+                conform : function(value){
+                    return ~hosts.indexOf(value);
+                },
+                warning : '该host不存在,请重新输入!'
+            },function(err, values){
+                if(err) return logger.errlog(err);
+
+                //如果删除的是默认host,则将默认值置空
+                if(values.del == config.default){
+                    config.default = '';
+                }
+                delete config[values.del];
 
                 fs.writeFile(path.join(__dirname,'config.json'), JSON.stringify(config,null,4), function(err){
                     if(err) return logger.errlog(err);
 
-                    logger.info(result.alias + ' 添加成功!');
+                    logger.info('删除成功! 当前host列表:');
+                    _.forOwn(config, function(value, key){
+                        if(key == 'default') return;
+
+                        logger.info([key,value].join(' '));
+                    });
                 })
-            })
+            });
+        },
+
+        /**
+         * 选择默认host
+         */
+        dfhost : function(){
+            var  hosts = [];
+
+            _.forOwn(config, function(value, key){
+                if(key == 'default') return;
+
+                hosts.push(key);
+            });
+
+            _.remove(hosts, function(el){
+                return el == config.default;
+            });
+
+            logger.info(['当前默认host:', config.default].join(' '));
+            logger.info('可选host: (' + hosts.join(', ') + ')');
+
+            prompt.start();
+            prompt.get({
+                name : 'default',
+                message : '选择默认host,请输入简称',
+                conform : function(value){
+                    return ~hosts.indexOf(value);
+                },
+                warning : '该host不存在,请重新输入!'
+            },function(err, values){
+                if(err) return logger.errlog(err);
+
+                config.default = values.default;
+
+                fs.writeFile(path.join(__dirname,'config.json'), JSON.stringify(config,null,4), function(err){
+                    if(err) return logger.errlog(err);
+
+                    logger.info('默认host修改成功! 当前host默认值:' + values.default);
+                })
+            });
         },
 
         help : function(){
@@ -203,15 +315,16 @@ Ng.prototype = {
                 '支持的命令:',
                 'list    ----  列出所有规则',
                 'add     ----  添加一条规则',
-                'modify  ----  修改一条规则',
-                'remove  ----  删除一条规则',
-                'host    ----  列出所有host配置',
-                'addhost ----  添加一条host配置',
-                'help    ----  显示帮助'
+                'md      ----  修改一条规则',
+                'rm      ----  删除一条规则',
+                'host    ----  列出所有host',
+                'addhost ----  添加一个host',
+                'rmhost  ----  删除一条host',
+                'dfhost  ----  修改默认host',
+                'help    ----  帮助'
             ].join('\n'));
         }
     }
 };
 
 module.exports = Ng;
-

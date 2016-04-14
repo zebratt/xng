@@ -4,31 +4,40 @@
  * @date: 16/4/12.
  */
 
-var ng = require('./ng');
+var Ng = require('./ng');
 var optimist = require('optimist');
 var config = require('./config.json');
 
 exports.run = function () {
     var args = optimist.argv;
 
-    /**
-     * 支持的command:
-     *     list
-     *     add
-     *     modify
-     *     remove
-     *     help
-     */
-    var arg0 = args._[0] || 'fuwu';
-    var arg1 = args._[1] || 'list';
+    var arg0 = args._[0] || config.default;
+    var arg1 = args._[1] || 'help';
+
+    //支持的command
+    var cmd = [
+        'list',
+        'add',
+        'modify',
+        'remove',
+        'host',
+        'addhost',
+        'help'
+    ];
 
     if(arg0 in config){
-        if(arg1 in ng){
-            ng[arg1](args._, config[arg0]);
+        if(~cmd.indexOf(arg1)){
+            new Ng({
+                args : args._,
+                fpath : config[arg0]
+            }).start(arg1);
         }
     }
 
-    if(arg0 in ng){
-        ng[arg0](args._, config.fuwu);
+    if(~cmd.indexOf(arg0)){
+        new Ng({
+            args : args._,
+            fpath : config[config.default]
+        }).start(arg0);
     }
 };

@@ -1,6 +1,6 @@
 {
   "name": "qng",
-  "version": "1.0.4",
+  "version": "2.0.1",
   "description": "A simple tool for nginx",
   "main": "index.js",
   "bin": {

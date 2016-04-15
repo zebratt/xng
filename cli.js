@@ -33,15 +33,7 @@ exports.run = function () {
     ];
 
     if(arg0 in config){
-        if(arg1 == 'help'){
-            arg1 = 'list';
-        }
-
         if(~cmd.indexOf(arg1)){
-            if(arg1 == 'help'){
-                arg1 = 'list';
-            }
-
             new Ng({
                 args : args._,
                 fpath : config[arg0]

@@ -208,20 +208,24 @@ Ng.prototype = {
                 var tpl = fs.readFileSync(path.join(__dirname,'tpl/base.conf'), 'utf8');
 
                 try{
-                    fs.writeFileSync(values.path, tpl.replace('$host$', values.host))
+                    fs.access(values.path, function(err){
+                        if(err){
+                            fs.writeFile(values.path, tpl.replace('$host$', values.host),function(){
+                                try{
+                                    fs.writeFileSync(path.join(__dirname,'config.json'), JSON.stringify(config,null,4));
+                                }catch(err){
+                                    logger.errlog('config.json文件更新失败!');
+                                }
+
+                                logger.info(values.alias + ' 添加成功! 当前host列表:');
+
+                                _this.actions.host();
+                            })
+                        }
+                    });
                 }catch(err){
-                    logger.errlog('host配置文件创建失败,请检查文件路径是否有效!');
+                    logger.errlog('请检查文件路径是否有效!');
                 }
-
-                try{
-                    fs.writeFileSync(path.join(__dirname,'config.json'), JSON.stringify(config,null,4));
-                }catch(err){
-                    logger.errlog('config.json文件更新失败!');
-                }
-
-                logger.info(values.alias + ' 添加成功! 当前host列表:');
-
-                _this.actions.host();
             })
         },
 
@@ -251,6 +255,8 @@ Ng.prototype = {
             },function(err, values){
                 if(err) return logger.errlog(err);
 
+                var delUrl = config[values.del];
+
                 //如果删除的是默认host,则将默认值置空
                 if(values.del == config.default){
                     config.default = '';
@@ -260,7 +266,11 @@ Ng.prototype = {
                 fs.writeFile(path.join(__dirname,'config.json'), JSON.stringify(config,null,4), function(err){
                     if(err) return logger.errlog(err);
 
-                    logger.info('删除成功! 当前host列表:');
+                    exec('rm -f ' + delUrl,function(){
+                        logger.info(delUrl + ' 已删除!');
+                    });
+
+                    logger.info('当前host列表:');
                     _.forOwn(config, function(value, key){
                         if(key == 'default') return;
 

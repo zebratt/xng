@@ -214,12 +214,18 @@ Ng.prototype = {
                                 try{
                                     fs.writeFileSync(path.join(__dirname,'config.json'), JSON.stringify(config,null,4));
                                 }catch(err){
+                                    logger.errlog(err);
                                     logger.errlog('config.json文件更新失败!');
                                 }
 
                                 logger.info(values.alias + ' 添加成功! 当前host列表:');
 
                                 _this.actions.host();
+
+                                logger.info('正在重启nginx...');
+                                exec('sudo nginx -s reload',function(){
+                                    logger.info('nginx 重启成功!');
+                                });
                             })
                         }
                     });
@@ -283,7 +289,7 @@ Ng.prototype = {
         /**
          * 选择默认host
          */
-        dfhost : function(){
+        df : function(){
             var  hosts = [];
 
             _.forOwn(config, function(value, key){
@@ -330,7 +336,7 @@ Ng.prototype = {
                 'host    ----  列出所有host',
                 'addhost ----  添加一个host',
                 'rmhost  ----  删除一条host',
-                'dfhost  ----  修改默认host',
+                'df      ----  修改默认host',
                 'help    ----  帮助'
             ].join('\n'));
         }

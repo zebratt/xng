@@ -28,7 +28,7 @@ exports.run = function () {
         'host',
         'addhost',
         'rmhost',
-        'dfhost',
+        'df',
         'help'
     ];
 
